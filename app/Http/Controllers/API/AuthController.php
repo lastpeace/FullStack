@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
+
+
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -85,45 +87,45 @@ class AuthController extends Controller
     }
 
     public function update(Request $request, $id)
-{
-    $employee = Employee::find($id);
+    {
+        $employee = Employee::find($id);
 
-    if (!$employee) {
+        if (!$employee) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Employee not found',
+                'data' => null
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'image' => 'nullable|url',
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'divisions_id' => 'required|exists:divisions,id',
+            'position' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation errors',
+                'data' => $validator->errors()
+            ], 400);
+        }
+
+        $employee->update($request->only(['image', 'name', 'phone', 'divisions_id', 'position']));
+
         return response()->json([
-            'status' => 'error',
-            'message' => 'Employee not found',
-            'data' => null
-        ], 404);
+            'status' => 'success',
+            'message' => 'Employee updated successfully',
+            'data' => [
+                'employee' => $employee
+            ]
+        ], 200);
     }
 
-    $validator = Validator::make($request->all(), [
-        'image' => 'nullable|url',
-        'name' => 'required|string|max:255',
-        'phone' => 'required|string|max:20',
-        'divisions_id' => 'required|exists:divisions,id',
-        'position' => 'required|string|max:255',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Validation errors',
-            'data' => $validator->errors()
-        ], 400);
-    }
-
-    $employee->update($request->only(['image', 'name', 'phone', 'divisions_id', 'position']));
-
-    return response()->json([
-        'status' => 'success',
-        'message' => 'Employee updated successfully',
-        'data' => [
-            'employee' => $employee
-        ]
-    ], 200);
-}
-
-//menghapus token dengan logout
+    //menghapus token dengan logout
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
